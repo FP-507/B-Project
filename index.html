@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guitar Hero – Para Janeth ♥</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: radial-gradient(ellipse at center, #1a0a2e 0%, #07070f 70%);
+            color: #fff;
+            font-family: 'Arial Black', Impact, Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ── Floating background particles ── */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            from { transform: translateY(105vh) rotate(0deg);  opacity: 0.8; }
+            to   { transform: translateY(-10vh)  rotate(720deg); opacity: 0;   }
+        }
+
+        /* ═══════════════════════════════════
+           NAME SCREEN
+        ═══════════════════════════════════ */
+        #nameScreen {
+            text-align: center;
+            animation: fadeDown 0.5s ease;
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            width: 100%;
+            max-width: 520px;
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-25px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .title-guitar {
+            font-size: clamp(2.8rem, 12vw, 5rem);
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #00ff66 0%, #ffff00 30%, #ff0000 60%, #ff6600 80%, #3399ff 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradShift 4s ease infinite;
+            filter: drop-shadow(0 0 18px rgba(255,255,255,0.25));
+            line-height: 1;
+        }
+        .title-hero {
+            font-size: clamp(2.8rem, 12vw, 5rem);
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #ff0066, #ff6600, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(255,0,102,0.5));
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        @keyframes gradShift {
+            0%,100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: clamp(0.75rem, 3vw, 1.1rem);
+            color: #ff69b4;
+            letter-spacing: 4px;
+            font-style: italic;
+            text-shadow: 0 0 12px rgba(255,105,180,0.6);
+            margin-bottom: 2rem;
+        }
+
+        .name-label {
+            font-size: 0.78rem;
+            color: #777;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        #nameInput {
+            display: block;
+            width: min(280px, 80vw);
+            margin: 0 auto 18px;
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            border: 2px solid rgba(255,255,255,0.18);
+            border-radius: 50px;
+            background: rgba(255,255,255,0.07);
+            color: #fff;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(8px);
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        #nameInput:focus {
+            border-color: #ff69b4;
+            box-shadow: 0 0 22px rgba(255,105,180,0.35);
+        }
+        #nameInput::placeholder { color: #444; }
+
+        #startBtn {
+            display: block;
+            margin: 0 auto 20px;
+            padding: 16px 48px;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            font-family: inherit;
+            font-weight: bold;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #ff0066, #ff6600);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255,0,102,0.45), 0 4px 14px rgba(0,0,0,0.4);
+            transition: transform 0.15s, box-shadow 0.15s;
+            touch-action: manipulation;
+        }
+        #startBtn:hover  { transform: translateY(-2px) scale(1.04); box-shadow: 0 0 45px rgba(255,0,102,0.65), 0 6px 18px rgba(0,0,0,0.5); }
+        #startBtn:active { transform: scale(0.97); }
+
+        /* Key/Touch hints */
+        .key-row { display: flex; justify-content: center; gap: 8px; }
+        .key-hint { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .key-circle {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 2px solid;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: bold;
+        }
+        .kc-g { border-color:#00cc00; color:#00cc00; background:rgba(0,204,0,0.1); }
+        .kc-r { border-color:#cc0000; color:#cc0000; background:rgba(204,0,0,0.1); }
+        .kc-y { border-color:#cccc00; color:#cccc00; background:rgba(204,204,0,0.1); }
+        .kc-b { border-color:#3399ff; color:#3399ff; background:rgba(51,153,255,0.1); }
+        .kc-o { border-color:#ff6600; color:#ff6600; background:rgba(255,102,0,0.1); }
+        .key-name { font-size: 0.55rem; color: #555; letter-spacing: 1px; }
+
+        /* ═══════════════════════════════════
+           GAME WRAPPER  (scaled to viewport)
+        ═══════════════════════════════════ */
+        #gameWrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            z-index: 10;
+            transform: scale(var(--gs, 1));
+            transform-origin: top center;
+        }
+
+        /* HUD */
+        #hud {
+            width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 4px;
+            min-height: 32px;
+        }
+        #playerNameDisplay { font-size: 0.82rem; color: #ff69b4; letter-spacing: 1px; }
+        #scoreDisplay {
+            font-size: 1.8rem; font-weight: bold;
+            color: #ffff00;
+            text-shadow: 0 0 12px rgba(255,255,0,0.5);
+            letter-spacing: 2px;
+        }
+        #comboDisplay { font-size: 0.82rem; color: #00ffff; text-align: right; }
+
+        /* ── Highway ── */
+        #highway {
+            position: relative;
+            width: 500px; height: 600px;
+            overflow: hidden;
+            touch-action: none;
+            background: linear-gradient(to bottom,
+                #08081c 0%, #0e0e2a 25%, #080818 60%, #05050e 100%);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 4px 4px 0 0;
+        }
+        #highway::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                to bottom, transparent, transparent 39px,
+                rgba(255,255,255,0.025) 40px);
+            pointer-events: none; z-index: 0;
+        }
+
+        .lane-div {
+            position: absolute; top: 0; bottom: 0; width: 1px;
+            background: linear-gradient(to bottom,
+                transparent 0%,
+                rgba(255,255,255,0.055) 40%,
+                rgba(255,255,255,0.075) 70%,
+                rgba(255,255,255,0.03) 100%);
+            z-index: 1;
+        }
+
+        /* ── Notes ── */
+        .note {
+            position: absolute;
+            width: 82px; height: 26px;
+            border-radius: 5px;
+            border: 2px solid;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .note::after {
+            content: '';
+            position: absolute;
+            top: 4px; left: 8px; right: 8px; height: 4px;
+            background: rgba(255,255,255,0.38);
+            border-radius: 3px;
+        }
+
+        /* ── Hit zone line ── */
+        #hitZoneLine {
+            position: absolute; bottom: 80px;
+            left: 0; right: 0; height: 2px;
+            background: rgba(255,255,255,0.22);
+            box-shadow: 0 0 8px rgba(255,255,255,0.3);
+            z-index: 8; pointer-events: none;
+        }
+
+        /* ── Visual hit buttons (decorative indicators) ── */
+        .hit-btn {
+            position: absolute; bottom: 56px;
+            width: 82px; height: 44px;
+            border-radius: 10px; border: 2px solid;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: bold;
+            z-index: 10; pointer-events: none;
+            transition: filter 0.05s, box-shadow 0.05s;
+        }
+        .hit-btn.active { filter: brightness(2.2) saturate(1.6) !important; }
+
+        #btn0 { left:   9px; border-color:#00cc00; color:#00cc00; background:rgba(0,204,0,0.14); }
+        #btn1 { left: 109px; border-color:#cc0000; color:#cc0000; background:rgba(204,0,0,0.14); }
+        #btn2 { left: 209px; border-color:#cccc00; color:#cccc00; background:rgba(204,204,0,0.14); }
+        #btn3 { left: 309px; border-color:#3399ff; color:#3399ff; background:rgba(51,153,255,0.14); }
+        #btn4 { left: 409px; border-color:#ff6600; color:#ff6600; background:rgba(255,102,0,0.14); }
+
+        /* ── Touch zones (invisible, large tap targets) ── */
+        .lane-touch {
+            position: absolute;
+            bottom: 0;
+            width: 100px;
+            height: 130px;   /* tall touch area, thumb-friendly */
+            z-index: 15;
+            cursor: pointer;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+        #tz0 { left:   0; }
+        #tz1 { left: 100px; }
+        #tz2 { left: 200px; }
+        #tz3 { left: 300px; }
+        #tz4 { left: 400px; }
+
+        /* ── Feedback text ── */
+        #feedback {
+            position: absolute; top: 44%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.65rem; font-weight: bold;
+            z-index: 20; pointer-events: none; opacity: 0;
+        }
+        @keyframes fbPop {
+            0%   { opacity: 1; transform: translate(-50%,-50%) scale(1.45); }
+            60%  { opacity: 1; transform: translate(-50%,-50%) scale(1.05); }
+            100% { opacity: 0; transform: translate(-50%,-62%) scale(0.9); }
+        }
+        .fb-anim { animation: fbPop 0.58s ease forwards; }
+
+        /* ── Countdown overlay ── */
+        #countdown {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5rem; font-weight: bold;
+            color: #fff; z-index: 30;
+            text-shadow: 0 0 30px rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.45);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        #countdown.visible { opacity: 1; }
+
+        /* Progress bar */
+        #progressBar {
+            width: 500px; height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 0 0 4px 4px; overflow: hidden;
+        }
+        #progressFill {
+            height: 100%;
+            background: linear-gradient(to right, #ff0066, #ff6600, #ffff00);
+            width: 0%;
+            transition: width 0.12s linear;
+        }
+
+        /* ═══════════════════════════════════
+           END SCREEN
+        ═══════════════════════════════════ */
+        #endScreen {
+            display: none;
+            text-align: center;
+            animation: fadeDown 0.45s ease;
+            position: relative; z-index: 10;
+            padding: 0 20px;
+            width: 100%;
+            max-width: 520px;
+        }
+        #endScreen h2 {
+            font-size: clamp(1.6rem, 6vw, 2.4rem);
+            background: linear-gradient(135deg, #ff0066, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+        .for-janeth-end {
+            font-size: clamp(0.75rem, 3vw, 1rem); color: #ff69b4; letter-spacing: 3px;
+            margin-bottom: 1.2rem; font-style: italic;
+            text-shadow: 0 0 10px rgba(255,105,180,0.5);
+        }
+        #finalScore {
+            font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: bold;
+            color: #ffff00; text-shadow: 0 0 18px rgba(255,255,0,0.5);
+            margin-bottom: 0.4rem;
+        }
+        #grade {
+            font-size: clamp(3.5rem, 14vw, 5.5rem); font-weight: bold;
+            line-height: 1; margin-bottom: 0.7rem;
+        }
+        #stats {
+            font-family: Arial, sans-serif;
+            color: #aaa; line-height: 1.9;
+            font-size: clamp(0.8rem, 3vw, 0.92rem); margin-bottom: 1.5rem;
+        }
+        #restartBtn {
+            padding: 14px 42px;
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-family: inherit; font-weight: bold;
+            background: linear-gradient(135deg, #0055ff, #00ccff);
+            border: none; border-radius: 50px;
+            color: #fff; cursor: pointer; letter-spacing: 2px;
+            box-shadow: 0 0 25px rgba(0,102,255,0.45);
+            transition: transform 0.15s, box-shadow 0.15s;
+            touch-action: manipulation;
+        }
+        #restartBtn:hover  { transform: translateY(-2px) scale(1.04); box-shadow: 0 0 38px rgba(0,102,255,0.65); }
+        #restartBtn:active { transform: scale(0.97); }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ NAME SCREEN ═══════════ -->
+<div id="nameScreen">
+    <div class="title-guitar">GUITAR</div>
+    <div class="title-hero">HERO</div>
+    <div class="subtitle">♥ &nbsp; P A R A &nbsp; J A N E T H &nbsp; ♥</div>
+    <div class="name-label">¿Cómo te llamas?</div>
+    <input  type="text" id="nameInput" placeholder="Ingresa tu nombre..."
+            maxlength="20" autocomplete="off" spellcheck="false" enterkeyhint="go">
+    <button id="startBtn">¡ JUGAR !</button>
+    <div class="key-row">
+        <div class="key-hint"><div class="key-circle kc-g">A</div><div class="key-name">Verde</div></div>
+        <div class="key-hint"><div class="key-circle kc-r">S</div><div class="key-name">Rojo</div></div>
+        <div class="key-hint"><div class="key-circle kc-y">D</div><div class="key-name">Amarillo</div></div>
+        <div class="key-hint"><div class="key-circle kc-b">F</div><div class="key-name">Azul</div></div>
+        <div class="key-hint"><div class="key-circle kc-o">SP</div><div class="key-name">Naranja</div></div>
+    </div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="gameWrapper">
+    <div id="hud">
+        <div id="playerNameDisplay">🎸 Jugador</div>
+        <div id="scoreDisplay">000000</div>
+        <div id="comboDisplay">x0 combo</div>
+    </div>
+
+    <div id="highway">
+        <div class="lane-div" style="left:100px"></div>
+        <div class="lane-div" style="left:200px"></div>
+        <div class="lane-div" style="left:300px"></div>
+        <div class="lane-div" style="left:400px"></div>
+
+        <div id="hitZoneLine"></div>
+
+        <!-- Visual buttons (pointer-events:none, purely decorative) -->
+        <div class="hit-btn" id="btn0">A</div>
+        <div class="hit-btn" id="btn1">S</div>
+        <div class="hit-btn" id="btn2">D</div>
+        <div class="hit-btn" id="btn3">F</div>
+        <div class="hit-btn" id="btn4">SP</div>
+
+        <!-- Touch zones: large invisible tap areas per lane -->
+        <div class="lane-touch" id="tz0" data-lane="0"></div>
+        <div class="lane-touch" id="tz1" data-lane="1"></div>
+        <div class="lane-touch" id="tz2" data-lane="2"></div>
+        <div class="lane-touch" id="tz3" data-lane="3"></div>
+        <div class="lane-touch" id="tz4" data-lane="4"></div>
+
+        <div id="feedback"></div>
+        <div id="countdown"></div>
+    </div>
+
+    <div id="progressBar"><div id="progressFill"></div></div>
+</div>
+
+<!-- ═══════════ END SCREEN ═══════════ -->
+<div id="endScreen">
+    <h2>🎸 ¡Canción Terminada!</h2>
+    <div class="for-janeth-end">♥ &nbsp; P A R A &nbsp; J A N E T H &nbsp; ♥</div>
+    <div id="finalScore"></div>
+    <div id="grade"></div>
+    <div id="stats"></div>
+    <button id="restartBtn">Jugar de Nuevo</button>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+// RESPONSIVE SCALE
+// ════════════════════════════════════════════
+const gameWrapper = document.getElementById('gameWrapper');
+const GAME_W = 520; // 500px highway + a little margin
+const GAME_H = 660; // HUD + highway + progress + gaps
+
+function applyScale() {
+    const s = Math.min(
+        (window.innerWidth  - 8)  / GAME_W,
+        (window.innerHeight - 8)  / GAME_H,
+        1
+    );
+    document.documentElement.style.setProperty('--gs', s.toFixed(4));
+}
+applyScale();
+window.addEventListener('resize', applyScale);
+// Also fix body height on mobile browser chrome show/hide
+window.addEventListener('orientationchange', () => setTimeout(applyScale, 200));
+
+// ════════════════════════════════════════════
+// BACKGROUND PARTICLES
+// ════════════════════════════════════════════
+(function () {
+    const palette = ['#ff0066','#ff6600','#ffff00','#00ff88','#0066ff','#cc00ff','#ff69b4'];
+    for (let i = 0; i < 28; i++) {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        const s = Math.random() * 4 + 2;
+        el.style.cssText = [
+            `width:${s}px`, `height:${s}px`,
+            `left:${Math.random()*100}%`,
+            `background:${palette[Math.floor(Math.random()*palette.length)]}`,
+            `opacity:${(Math.random()*0.35+0.08).toFixed(2)}`,
+            `animation-duration:${(Math.random()*14+9).toFixed(1)}s`,
+            `animation-delay:-${(Math.random()*20).toFixed(1)}s`,
+        ].join(';');
+        document.body.appendChild(el);
+    }
+})();
+
+// ════════════════════════════════════════════
+// AUDIO
+// ════════════════════════════════════════════
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const LANE_FREQ = [261.63, 329.63, 392.00, 493.88, 587.33];
+
+function playSound(lane, hit) {
+    try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc  = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = LANE_FREQ[lane];
+        osc.type = hit ? 'sawtooth' : 'sine';
+        const vol = hit ? 0.22 : 0.04;
+        const dur = hit ? 0.20 : 0.08;
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + dur);
+    } catch (_) {}
+}
+
+// ════════════════════════════════════════════
+// SONG GENERATION
+// ════════════════════════════════════════════
+const BPM  = 128;
+const BEAT = (60 / BPM) * 1000;
+const HALF = BEAT / 2;
+const QRTR = BEAT / 4;
+
+function makeSong() {
+    const notes = [];
+    const add   = (lane, t) => notes.push({ lane, time: Math.round(t) });
+
+    function verse(t) {
+        add(0,t);           add(2,t+HALF);
+        add(1,t+BEAT);      add(3,t+BEAT+HALF);
+        add(0,t+BEAT*2);    add(4,t+BEAT*2+HALF);
+        add(2,t+BEAT*3);    add(1,t+BEAT*3+HALF);
+        return t + BEAT * 4;
+    }
+    function chorus(t) {
+        add(0,t);            add(2,t+QRTR);          add(4,t+HALF);          add(2,t+HALF+QRTR);
+        add(0,t+BEAT);       add(1,t+BEAT+QRTR);     add(3,t+BEAT+HALF);     add(1,t+BEAT+HALF+QRTR);
+        add(0,t+BEAT*2);     add(2,t+BEAT*2+QRTR);   add(4,t+BEAT*2+HALF);   add(3,t+BEAT*2+HALF+QRTR);
+        add(2,t+BEAT*3);     add(1,t+BEAT*3+QRTR);   add(0,t+BEAT*3+HALF);   add(2,t+BEAT*3+HALF+QRTR);
+        return t + BEAT * 4;
+    }
+    function bridge(t) {
+        for (let i = 0; i < 5; i++) add(i, t + i * HALF);
+        t += BEAT * 3;
+        for (let i = 4; i >= 0; i--) add(i, t + (4-i) * HALF);
+        t += BEAT * 3;
+        [0,4,0,4].forEach((l,i) => add(l, t + i*QRTR));
+        [1,3,1,3].forEach((l,i) => add(l, t + BEAT + i*QRTR));
+        [2,2].forEach((l,i)     => add(l, t + BEAT*2 + i*HALF));
+        return t + BEAT * 3;
+    }
+
+    let t = 2500;
+    t = verse(t); t = verse(t);
+    for (let i = 0; i < 4; i++) t = verse(t);
+    for (let i = 0; i < 4; i++) t = chorus(t);
+    for (let i = 0; i < 4; i++) t = verse(t);
+    for (let i = 0; i < 4; i++) t = chorus(t);
+    t = bridge(t); t = bridge(t);
+    for (let i = 0; i < 6; i++) t = chorus(t);
+
+    return { notes: notes.sort((a,b) => a.time - b.time), duration: t + 2000 };
+}
+
+// ════════════════════════════════════════════
+// GAME CONSTANTS
+// ════════════════════════════════════════════
+const COLORS    = ['#00cc00','#cc0000','#cccc00','#3399ff','#ff6600'];
+const COLORS_BG = [
+    'rgba(0,204,0,0.17)',   'rgba(204,0,0,0.17)',
+    'rgba(204,204,0,0.17)', 'rgba(51,153,255,0.17)',
+    'rgba(255,102,0,0.17)',
+];
+const KEYS      = ['a','s','d','f',' '];
+const HW_H      = 600;
+const HIT_Y     = HW_H - 80;
+const NOTE_SPD  = 300;
+const SPAWN_ADV = (HIT_Y / NOTE_SPD) * 1000;
+const HIT_WIN   = 125;
+const PERF_WIN  = 55;
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let gameRunning   = false;
+let gameStartTime = 0;
+let song          = null;
+let noteQueue     = [];
+let activeNotes   = [];
+let score         = 0, combo = 0, maxCombo = 0;
+let totalNotes    = 0, hitNotes = 0, perfectHits = 0;
+
+// ════════════════════════════════════════════
+// DOM REFS
+// ════════════════════════════════════════════
+const nameScreen   = document.getElementById('nameScreen');
+const endScreen    = document.getElementById('endScreen');
+const nameInput    = document.getElementById('nameInput');
+const highway      = document.getElementById('highway');
+const scoreEl      = document.getElementById('scoreDisplay');
+const comboEl      = document.getElementById('comboDisplay');
+const playerNameEl = document.getElementById('playerNameDisplay');
+const feedbackEl   = document.getElementById('feedback');
+const countdownEl  = document.getElementById('countdown');
+const progressFill = document.getElementById('progressFill');
+
+// ════════════════════════════════════════════
+// START FLOW
+// ════════════════════════════════════════════
+document.getElementById('startBtn').addEventListener('click', tryStart);
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { nameInput.blur(); tryStart(); } });
+
+function tryStart() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const name = nameInput.value.trim() || 'Jugador';
+    playerNameEl.textContent = '🎸 ' + name;
+
+    score = 0; combo = 0; maxCombo = 0;
+    hitNotes = 0; perfectHits = 0;
+    activeNotes = [];
+    highway.querySelectorAll('.note').forEach(el => el.remove());
+
+    song       = makeSong();
+    noteQueue  = [...song.notes];
+    totalNotes = song.notes.length;
+
+    nameScreen.style.display = 'none';
+    endScreen.style.display  = 'none';
+    gameWrapper.style.display = 'flex';
+    applyScale();
+
+    updateHUD();
+    startCountdown();
+}
+
+function startCountdown() {
+    let count = 3;
+    countdownEl.textContent = count;
+    countdownEl.classList.add('visible');
+    const iv = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownEl.textContent = count;
+        } else {
+            clearInterval(iv);
+            countdownEl.textContent = '¡YA!';
+            setTimeout(() => {
+                countdownEl.classList.remove('visible');
+                beginGame();
+            }, 500);
+        }
+    }, 800);
+}
+
+function beginGame() {
+    gameRunning   = true;
+    gameStartTime = performance.now();
+    requestAnimationFrame(gameLoop);
+}
+
+// ════════════════════════════════════════════
+// GAME LOOP
+// ════════════════════════════════════════════
+function gameLoop(ts) {
+    if (!gameRunning) return;
+    const elapsed = ts - gameStartTime;
+
+    progressFill.style.width = Math.min(100, elapsed / song.duration * 100) + '%';
+
+    while (noteQueue.length > 0 && noteQueue[0].time - elapsed <= SPAWN_ADV + 120)
+        spawnNote(noteQueue.shift());
+
+    for (let i = activeNotes.length - 1; i >= 0; i--) {
+        const n = activeNotes[i];
+        const y = ((elapsed - (n.time - SPAWN_ADV)) / 1000) * NOTE_SPD;
+        n.el.style.top = y + 'px';
+
+        if (y > HIT_Y + 65) {
+            n.el.style.opacity = '0.12';
+            const el = n.el;
+            setTimeout(() => el.remove(), 280);
+            activeNotes.splice(i, 1);
+            combo = 0;
+            updateHUD();
+            showFeedback('MISS', '#ff4040');
+        }
+    }
+
+    if (elapsed >= song.duration && noteQueue.length === 0 && activeNotes.length === 0) {
+        endGame(); return;
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+function spawnNote(note) {
+    const el = document.createElement('div');
+    el.className = 'note';
+    el.style.left        = (note.lane * 100 + 9) + 'px';
+    el.style.top         = '-30px';
+    el.style.background  = COLORS_BG[note.lane];
+    el.style.borderColor = COLORS[note.lane];
+    el.style.boxShadow   = `0 0 9px ${COLORS[note.lane]}, inset 0 1px 0 rgba(255,255,255,0.2)`;
+    highway.appendChild(el);
+    activeNotes.push({ ...note, el });
+}
+
+// ════════════════════════════════════════════
+// HIT LOGIC  (shared by keyboard + touch)
+// ════════════════════════════════════════════
+function pressLane(lane) {
+    if (!gameRunning) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    document.getElementById('btn' + lane).classList.add('active');
+    tryHit(lane);
+}
+function releaseLane(lane) {
+    document.getElementById('btn' + lane).classList.remove('active');
+}
+
+function tryHit(lane) {
+    const elapsed = performance.now() - gameStartTime;
+    let best = null, bestDist = HIT_WIN + 1;
+    for (const n of activeNotes) {
+        if (n.lane !== lane) continue;
+        const dist = Math.abs(elapsed - n.time);
+        if (dist < bestDist) { best = n; bestDist = dist; }
+    }
+
+    if (best) {
+        const idx = activeNotes.indexOf(best);
+        if (idx !== -1) activeNotes.splice(idx, 1);
+
+        const isPerfect = bestDist <= PERF_WIN;
+        const mult      = Math.min(4, 1 + Math.floor(combo / 10));
+        score += (isPerfect ? 100 : 50) * mult;
+        combo++; maxCombo = Math.max(maxCombo, combo);
+        hitNotes++; if (isPerfect) perfectHits++;
+
+        best.el.style.background = COLORS[lane] + 'aa';
+        best.el.style.transform  = 'scaleY(0.4)';
+        best.el.style.transition = 'opacity 0.1s, transform 0.1s';
+        const el = best.el;
+        setTimeout(() => el.remove(), 120);
+
+        playSound(lane, true);
+        showFeedback(isPerfect ? 'PERFECT!' : 'GOOD!', isPerfect ? '#ffff00' : '#00ff88');
+        updateHUD();
+
+        const btn = document.getElementById('btn' + lane);
+        btn.style.boxShadow = `0 0 22px ${COLORS[lane]}, 0 0 44px ${COLORS[lane]}44`;
+        setTimeout(() => { btn.style.boxShadow = ''; }, 220);
+    } else {
+        playSound(lane, false);
+    }
+}
+
+// ════════════════════════════════════════════
+// KEYBOARD INPUT
+// ════════════════════════════════════════════
+const held = new Set();
+document.addEventListener('keydown', e => {
+    const key = e.key === ' ' ? ' ' : e.key.toLowerCase();
+    if (held.has(key)) return;
+    held.add(key);
+    const lane = KEYS.indexOf(key);
+    if (lane < 0) return;
+    e.preventDefault();
+    pressLane(lane);
+});
+document.addEventListener('keyup', e => {
+    const key = e.key === ' ' ? ' ' : e.key.toLowerCase();
+    held.delete(key);
+    const lane = KEYS.indexOf(key);
+    if (lane >= 0) releaseLane(lane);
+});
+
+// ════════════════════════════════════════════
+// TOUCH INPUT
+// ════════════════════════════════════════════
+// Track which touch identifiers are pressing each lane
+const touchLanes = new Map(); // touchId → lane
+
+document.querySelectorAll('.lane-touch').forEach(zone => {
+    const lane = parseInt(zone.dataset.lane);
+
+    zone.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+            if (!touchLanes.has(t.identifier)) {
+                touchLanes.set(t.identifier, lane);
+                pressLane(lane);
+            }
+        }
+    }, { passive: false });
+
+    zone.addEventListener('touchend', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+            if (touchLanes.get(t.identifier) === lane) {
+                touchLanes.delete(t.identifier);
+                releaseLane(lane);
+            }
+        }
+    }, { passive: false });
+
+    zone.addEventListener('touchcancel', e => {
+        for (const t of e.changedTouches) {
+            if (touchLanes.has(t.identifier)) {
+                releaseLane(touchLanes.get(t.identifier));
+                touchLanes.delete(t.identifier);
+            }
+        }
+    }, { passive: false });
+});
+
+// ════════════════════════════════════════════
+// HUD
+// ════════════════════════════════════════════
+function updateHUD() {
+    scoreEl.textContent = String(score).padStart(6, '0');
+    const mult = Math.min(4, 1 + Math.floor(combo / 10));
+    comboEl.innerHTML   = `x${combo} <span style="font-size:.7rem;color:#ffaa00">×${mult}</span>`;
+}
+
+// ════════════════════════════════════════════
+// FEEDBACK POPUP
+// ════════════════════════════════════════════
+function showFeedback(text, color) {
+    feedbackEl.textContent      = text;
+    feedbackEl.style.color      = color;
+    feedbackEl.style.textShadow = `0 0 18px ${color}`;
+    feedbackEl.className        = '';
+    void feedbackEl.offsetWidth;
+    feedbackEl.className        = 'fb-anim';
+}
+
+// ════════════════════════════════════════════
+// END GAME
+// ════════════════════════════════════════════
+function endGame() {
+    gameRunning = false;
+    highway.querySelectorAll('.note').forEach(el => el.remove());
+    activeNotes = [];
+
+    gameWrapper.style.display = 'none';
+    endScreen.style.display   = 'block';
+
+    const acc = totalNotes > 0 ? hitNotes / totalNotes * 100 : 0;
+    let grade, gColor;
+    if      (acc >= 95) { grade = 'S'; gColor = '#ffff00'; }
+    else if (acc >= 80) { grade = 'A'; gColor = '#00ff88'; }
+    else if (acc >= 65) { grade = 'B'; gColor = '#3399ff'; }
+    else if (acc >= 50) { grade = 'C'; gColor = '#ff6600'; }
+    else                { grade = 'D'; gColor = '#cc4444'; }
+
+    document.getElementById('finalScore').textContent = score.toLocaleString() + ' pts';
+    const gradeEl = document.getElementById('grade');
+    gradeEl.textContent      = grade;
+    gradeEl.style.color      = gColor;
+    gradeEl.style.textShadow = `0 0 35px ${gColor}, 0 0 70px ${gColor}44`;
+
+    document.getElementById('stats').innerHTML = `
+        <div>🎸 &nbsp;<b style="color:#fff">${playerNameEl.textContent.replace('🎸 ','')}</b></div>
+        <div>Notas acertadas: <b style="color:#fff">${hitNotes} / ${totalNotes}</b></div>
+        <div>Perfects: <b style="color:#ffff00">${perfectHits}</b></div>
+        <div>Precisión: <b style="color:#fff">${acc.toFixed(1)}%</b></div>
+        <div>Combo máximo: <b style="color:#00ffff">${maxCombo}</b></div>
+    `;
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+    endScreen.style.display  = 'none';
+    nameScreen.style.display = 'block';
+});
+</script>
+</body>
+</html>
