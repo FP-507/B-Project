@@ -1,0 +1,153 @@
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+    background: radial-gradient(ellipse at center, #1a0a2e 0%, #07070f 70%);
+    color: #fff;
+    font-family: 'Arial Black', Impact, Arial, sans-serif;
+    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ── Particles ── */
+.particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: floatUp linear infinite;
+}
+@keyframes floatUp {
+    from { transform: translateY(105vh) rotate(0deg);  opacity: 0.8; }
+    to   { transform: translateY(-10vh)  rotate(720deg); opacity: 0;   }
+}
+
+/* ── Login Card ── */
+#loginScreen {
+    text-align: center;
+    animation: fadeDown 0.55s ease;
+    position: relative;
+    z-index: 10;
+    padding: 0 24px;
+    width: 100%;
+    max-width: 480px;
+}
+@keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-28px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Icon ── */
+.hub-icon {
+    font-size: clamp(3rem, 14vw, 5.5rem);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    filter: drop-shadow(0 0 20px rgba(255,100,200,0.5));
+    animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.07); }
+}
+
+/* ── Title ── */
+.hub-title {
+    font-size: clamp(3rem, 13vw, 5.5rem);
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #ff0066 0%, #ff6600 35%, #ffff00 65%, #00ff88 100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradShift 4s ease infinite;
+    filter: drop-shadow(0 0 18px rgba(255,255,255,0.2));
+    margin-bottom: 0.3rem;
+}
+@keyframes gradShift {
+    0%, 100% { background-position: 0%   50%; }
+    50%       { background-position: 100% 50%; }
+}
+
+.hub-subtitle {
+    font-size: clamp(0.7rem, 3vw, 1rem);
+    color: #ff69b4;
+    letter-spacing: 5px;
+    font-style: italic;
+    text-shadow: 0 0 12px rgba(255,105,180,0.5);
+    margin-bottom: 2.5rem;
+}
+
+/* ── Label ── */
+.name-label {
+    font-size: clamp(0.7rem, 2.8vw, 0.85rem);
+    color: #666;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+/* ── Input ── */
+#nameInput {
+    display: block;
+    width: min(300px, 85vw);
+    margin: 0 auto 20px;
+    padding: 16px 28px;
+    font-size: clamp(1rem, 4.5vw, 1.2rem);
+    font-family: inherit;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 50px;
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    backdrop-filter: blur(8px);
+    touch-action: auto;
+    user-select: text;
+    -webkit-user-select: text;
+}
+#nameInput:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 24px rgba(255,105,180,0.4);
+}
+#nameInput::placeholder { color: #3a3a3a; }
+
+/* ── Play Button ── */
+#playBtn {
+    display: block;
+    margin: 0 auto 24px;
+    padding: 18px 52px;
+    font-size: clamp(1rem, 4.5vw, 1.3rem);
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #ff0066, #ff6600);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 32px rgba(255,0,102,0.5), 0 4px 16px rgba(0,0,0,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
+    touch-action: manipulation;
+    min-width: min(240px, 70vw);
+}
+#playBtn:active { transform: scale(0.95); }
+
+/* ── Message / Error ── */
+#message {
+    min-height: 2rem;
+    font-size: clamp(0.8rem, 3.5vw, 1rem);
+    letter-spacing: 1px;
+    transition: opacity 0.3s;
+    opacity: 0;
+}
+#message.visible { opacity: 1; }
+#message.error   { color: #ff4455; }
+#message.info    { color: #ffcc44; }

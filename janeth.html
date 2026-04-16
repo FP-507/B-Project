@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guitar Hero ♥ Para Janeth</title>
+    <link rel="stylesheet" href="css/janeth.css">
+</head>
+<body>
+
+<!-- ═══════════ TAP OVERLAY ═══════════ -->
+<div id="tapOverlay">
+    <div class="to-title">GUITAR</div>
+    <div class="to-hero">HERO</div>
+    <div class="to-subtitle">♥ &nbsp; P A R A &nbsp; J A N E T H &nbsp; ♥</div>
+    <div class="to-song">♪ &nbsp; Risk It All &nbsp;·&nbsp; Bruno Mars &nbsp; ♪</div>
+    <div class="to-cta">TOCA PARA EMPEZAR</div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="gameWrapper">
+    <div id="hud">
+        <div id="playerNameDisplay">🎸 Jugador</div>
+        <div id="scoreDisplay">000000</div>
+        <div id="comboDisplay">x0 combo</div>
+    </div>
+
+    <div id="highway">
+        <div class="lane-div" style="left:100px"></div>
+        <div class="lane-div" style="left:200px"></div>
+        <div class="lane-div" style="left:300px"></div>
+        <div class="lane-div" style="left:400px"></div>
+
+        <div id="hitZoneLine"></div>
+
+        <div class="hit-btn" id="btn0"></div>
+        <div class="hit-btn" id="btn1"></div>
+        <div class="hit-btn" id="btn2"></div>
+        <div class="hit-btn" id="btn3"></div>
+        <div class="hit-btn" id="btn4"></div>
+
+        <div class="lane-touch" id="tz0" data-lane="0"></div>
+        <div class="lane-touch" id="tz1" data-lane="1"></div>
+        <div class="lane-touch" id="tz2" data-lane="2"></div>
+        <div class="lane-touch" id="tz3" data-lane="3"></div>
+        <div class="lane-touch" id="tz4" data-lane="4"></div>
+
+        <div id="feedback"></div>
+        <div id="countdown"></div>
+    </div>
+
+    <div id="songTitle">♪ &nbsp; R I S K &nbsp; I T &nbsp; A L L &nbsp; — &nbsp; B R U N O &nbsp; M A R S &nbsp; ♪</div>
+    <div id="progressBar"><div id="progressFill"></div></div>
+</div>
+
+<!-- ═══════════ END SCREEN ═══════════ -->
+<div id="endScreen">
+    <h2>🎸 ¡Canción Terminada!</h2>
+    <div class="for-janeth-end">♥ &nbsp; P A R A &nbsp; J A N E T H &nbsp; ♥</div>
+    <div id="finalScore"></div>
+    <div id="grade"></div>
+    <div id="stats"></div>
+    <div class="end-btns">
+        <button class="end-btn" id="restartBtn">Otra vez</button>
+        <button class="end-btn" id="menuBtn">Menú principal</button>
+    </div>
+</div>
+
+<script src="js/janeth.js"></script>
+</body>
+</html>
