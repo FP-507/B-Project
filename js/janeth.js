@@ -479,21 +479,27 @@ function endGame() {
 // ════════════════════════════════════════════
 // YOUTUBE — iframe creado en gesto del usuario
 // ════════════════════════════════════════════
-const YT_VIDEO_ID = '0y5yloj44Io'; // Risk It All — Bruno Mars
+// Audio local — funciona siempre, sin restricciones de embed
+const SONG_URL = 'audio/risk-it-all.mp3';
+let songAudio = null;
 
 function ytStart() {
     ytStop();
-    const f = document.createElement('iframe');
-    f.id    = 'ytFrame';
-    f.src   = `https://www.youtube.com/embed/${YT_VIDEO_ID}?autoplay=1&mute=0&controls=0&rel=0&playsinline=1`;
-    f.allow = 'autoplay; encrypted-media';
-    f.style.cssText = 'position:fixed;bottom:-400px;right:-400px;width:320px;height:180px;border:none;pointer-events:none;';
-    document.body.appendChild(f);
+    songAudio = new Audio(SONG_URL);
+    songAudio.loop = false;
+    songAudio.volume = 0.7;
+    const p = songAudio.play();
+    if (p && p.catch) {
+        p.catch(err => console.warn('Audio autoplay bloqueado:', err));
+    }
 }
 
 function ytStop() {
-    const f = document.getElementById('ytFrame');
-    if (f) f.remove();
+    if (songAudio) {
+        songAudio.pause();
+        songAudio.currentTime = 0;
+        songAudio = null;
+    }
 }
 
 // ════════════════════════════════════════════
