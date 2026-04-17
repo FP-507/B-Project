@@ -391,10 +391,10 @@ function tryHit(lane) {
         const el = best.el;
         setTimeout(() => el.remove(), 120);
 
-        // Cada 25 de combo un guiño secreto ♥
-        const secretMoment = isPerfect && combo > 0 && combo % 10 === 0;
-        const fbText  = secretMoment ? 'TE AMO ♥' : (isPerfect ? 'PERFECT!' : 'GOOD!');
-        const fbColor = secretMoment ? '#ff69b4' : (isPerfect ? '#ffff00' : '#00ff88');
+        // Cada 10 de combo un mensaje especial de ánimo
+        const milestone = isPerfect && combo > 0 && combo % 10 === 0;
+        const fbText  = milestone ? '¡INCREÍBLE!' : (isPerfect ? 'PERFECT!' : 'GOOD!');
+        const fbColor = milestone ? '#00e5ff' : (isPerfect ? '#ffff00' : '#00ff88');
         showFeedback(fbText, fbColor);
         updateHUD();
 
@@ -540,7 +540,6 @@ function endGame() {
         <div>Perfects: <b style="color:#ffff00">${perfectHits}</b></div>
         <div>Precisión: <b style="color:#fff">${acc.toFixed(1)}%</b></div>
         <div>Combo máximo: <b style="color:#00ffff">${maxCombo}</b></div>
-        <span class="end-love-mark">♥ &nbsp; t e &nbsp; a m o &nbsp; ♥</span>
     `;
 
     // 🎂 Animación de cumpleaños
@@ -590,12 +589,12 @@ function showBirthdayAnimation() {
         overlay.appendChild(c);
     }
 
-    // Corazones flotantes
-    const heartIcons = ['♥','💖','💕','💗','💝','🎈'];
+    // Iconos festivos flotantes (globos, regalos, estrellas, etc.)
+    const partyIcons = ['🎈','🎁','🎉','🎊','⭐','✨','🥳','🍰','🎂'];
     for (let i = 0; i < 24; i++) {
         const h = document.createElement('div');
         h.className = 'bday-heart';
-        h.textContent = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+        h.textContent = partyIcons[Math.floor(Math.random() * partyIcons.length)];
         h.style.left              = Math.random() * 100 + 'vw';
         h.style.fontSize          = (1.2 + Math.random() * 1.8).toFixed(1) + 'rem';
         h.style.animationDelay    = (Math.random() * 5).toFixed(2) + 's';

@@ -551,31 +551,6 @@ body::after {
         inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
-/* ── Marca de agua escondida ♥ ── */
-#loveMark {
-    position: absolute;
-    bottom: 4px;
-    right: 6px;
-    font-family: var(--font-ui);
-    font-size: 7px;
-    letter-spacing: 1px;
-    color: rgba(255,105,180,0.18);
-    pointer-events: none;
-    user-select: none;
-    font-weight: 400;
-    z-index: 1;
-}
-.end-love-mark {
-    display: block;
-    margin-top: 12px;
-    font-family: var(--font-ui);
-    font-size: 8px;
-    letter-spacing: 2px;
-    color: rgba(255,105,180,0.22);
-    text-align: center;
-    font-weight: 400;
-}
-
 /* ═══════════════════════════════════════════════════
    BIRTHDAY ANIMATION
    ═══════════════════════════════════════════════════ */
@@ -585,7 +560,9 @@ body::after {
     z-index: 200;
     pointer-events: none;
     overflow: hidden;
-    background: radial-gradient(ellipse at center, rgba(255,20,120,0.2) 0%, rgba(0,0,0,0) 65%);
+    background:
+        radial-gradient(ellipse 60% 40% at 30% 20%, rgba(255,204,0,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 70% 80%, rgba(0,229,255,0.18) 0%, transparent 60%);
     opacity: 0;
     transition: opacity 0.6s ease;
 }
@@ -607,7 +584,7 @@ body::after {
     -webkit-background-clip: text;
             background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 14px rgba(255,105,180,0.7));
+    filter: drop-shadow(0 0 14px rgba(255,204,0,0.7));
     animation: bdayPop 0.9s cubic-bezier(.3,1.6,.5,1) 0.2s forwards,
                bdayShine 3s linear 1s infinite,
                bdayBounce 1.8s ease-in-out 1.2s infinite;
@@ -641,13 +618,13 @@ body::after {
     100% { transform: translateY(110vh) rotate(1080deg); opacity: 0.85; }
 }
 
-/* Corazones */
+/* Iconos festivos flotantes */
 .bday-heart {
     position: absolute;
     bottom: -40px;
     font-size: 1.8rem;
     animation: heartFloat linear forwards;
-    filter: drop-shadow(0 0 8px rgba(255,50,120,0.85));
+    filter: drop-shadow(0 0 10px rgba(255,204,0,0.7));
 }
 @keyframes heartFloat {
     0%   { transform: translateY(0)      scale(0.6) rotate(-10deg); opacity: 0; }
