@@ -217,8 +217,25 @@ const PERF_WIN  = 55;
 // ════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════
-let gameRunning   = false;
-let gameStartTime = 0;
+let gameRunning    = false;
+let gameStartTime  = 0;      // fallback performance.now() anchor
+let audioAnchorSec = 0;      // songAudio.currentTime capturado al empezar
+
+// Calibración: ajusta si las notas caen adelantadas/retrasadas respecto al audio.
+// Positivo = notas caen MÁS TARDE (si sientes que llegan antes del beat).
+// Negativo = notas caen MÁS TEMPRANO (si sientes que llegan después del beat).
+// Puedes sobrescribir con ?cal=150 en la URL.
+const _urlCal   = parseInt(new URLSearchParams(location.search).get('cal'));
+const CAL_OFFSET = isFinite(_urlCal) ? _urlCal : 0;
+
+function getElapsed() {
+    // Preferimos el reloj del audio — lo que escuchas es la verdad
+    if (songAudio && !songAudio.paused && songAudio.readyState >= 2) {
+        return (songAudio.currentTime - audioAnchorSec) * 1000 + CAL_OFFSET;
+    }
+    // Fallback si el audio todavía no está listo
+    return performance.now() - gameStartTime + CAL_OFFSET;
+}
 let song          = null;
 let noteQueue     = [];
 let activeNotes   = [];
@@ -241,7 +258,8 @@ const progressFill = document.getElementById('progressFill');
 // GAME FLOW
 // ════════════════════════════════════════════
 function initGame() {
-    ytStop();
+    // NOTA: no llamamos ytStop() aquí — la música se inicia en handleTap()/restartBtn
+    // justo antes de initGame(), así que ytStop() aquí la mataría de inmediato.
     if (audioCtx.state === 'suspended') audioCtx.resume();
     playerNameEl.textContent = '🎸 ' + PLAYER_NAME;
 
@@ -283,6 +301,9 @@ function startCountdown() {
 function beginGame() {
     gameRunning   = true;
     gameStartTime = performance.now();
+    // Ancla el reloj del juego al tiempo ACTUAL del audio — así lo que escuchas
+    // y lo que cae siempre están en fase, aun si hubo retraso al cargar.
+    audioAnchorSec = (songAudio && songAudio.currentTime) ? songAudio.currentTime : 0;
     requestAnimationFrame(gameLoop);
 }
 
@@ -291,7 +312,7 @@ function beginGame() {
 // ════════════════════════════════════════════
 function gameLoop(ts) {
     if (!gameRunning) return;
-    const elapsed = ts - gameStartTime;
+    const elapsed = getElapsed();
 
     progressFill.style.width = Math.min(100, elapsed / song.duration * 100) + '%';
 
@@ -346,7 +367,7 @@ function releaseLane(lane) {
 }
 
 function tryHit(lane) {
-    const elapsed = performance.now() - gameStartTime;
+    const elapsed = getElapsed();
     let best = null, bestDist = HIT_WIN + 1;
     for (const n of activeNotes) {
         if (n.lane !== lane) continue;
@@ -370,16 +391,18 @@ function tryHit(lane) {
         const el = best.el;
         setTimeout(() => el.remove(), 120);
 
-        playSound(lane, true);
-        showFeedback(isPerfect ? 'PERFECT!' : 'GOOD!', isPerfect ? '#ffff00' : '#00ff88');
+        // Cada 25 de combo un guiño secreto ♥
+        const secretMoment = isPerfect && combo > 0 && combo % 10 === 0;
+        const fbText  = secretMoment ? 'TE AMO ♥' : (isPerfect ? 'PERFECT!' : 'GOOD!');
+        const fbColor = secretMoment ? '#ff69b4' : (isPerfect ? '#ffff00' : '#00ff88');
+        showFeedback(fbText, fbColor);
         updateHUD();
 
         const btn = document.getElementById('btn' + lane);
         btn.style.boxShadow = `0 0 22px ${COLORS[lane]}, 0 0 44px ${COLORS[lane]}44`;
         setTimeout(() => { btn.style.boxShadow = ''; }, 220);
-    } else {
-        playSound(lane, false);
     }
+    // Sin sonido sintético cuando fallas — solo la canción de fondo
 }
 
 // ════════════════════════════════════════════
@@ -418,6 +441,50 @@ document.querySelectorAll('.lane-touch').forEach(zone => {
             }
         }
     }, { passive: false });
+
+    // ── MOUSE (PC) ───────────────────────────────────────────
+    zone.addEventListener('mousedown', e => {
+        e.preventDefault();
+        pressLane(lane);
+        const up = () => {
+            releaseLane(lane);
+            window.removeEventListener('mouseup', up);
+        };
+        window.addEventListener('mouseup', up);
+    });
+
+    // evitar "fantasma" de selección
+    zone.addEventListener('contextmenu', e => e.preventDefault());
+});
+
+// También aceptamos los botones visibles (los de colores) como clickeables
+document.querySelectorAll('.hit-btn').forEach((btn, lane) => {
+    btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        pressLane(lane);
+        const up = () => {
+            releaseLane(lane);
+            window.removeEventListener('mouseup', up);
+        };
+        window.addEventListener('mouseup', up);
+    });
+});
+
+// ── TECLADO (opcional, bonus para PC) ────────────────────
+// A S D F G → carriles 0..4
+const KEY_MAP = { 'a':0, 's':1, 'd':2, 'f':3, 'g':4 };
+const keyHeld = new Set();
+window.addEventListener('keydown', e => {
+    const lane = KEY_MAP[e.key.toLowerCase()];
+    if (lane === undefined || keyHeld.has(lane)) return;
+    keyHeld.add(lane);
+    pressLane(lane);
+});
+window.addEventListener('keyup', e => {
+    const lane = KEY_MAP[e.key.toLowerCase()];
+    if (lane === undefined) return;
+    keyHeld.delete(lane);
+    releaseLane(lane);
 });
 
 // ════════════════════════════════════════════
@@ -473,24 +540,143 @@ function endGame() {
         <div>Perfects: <b style="color:#ffff00">${perfectHits}</b></div>
         <div>Precisión: <b style="color:#fff">${acc.toFixed(1)}%</b></div>
         <div>Combo máximo: <b style="color:#00ffff">${maxCombo}</b></div>
+        <span class="end-love-mark">♥ &nbsp; t e &nbsp; a m o &nbsp; ♥</span>
     `;
+
+    // 🎂 Animación de cumpleaños
+    showBirthdayAnimation();
 }
 
 // ════════════════════════════════════════════
-// YOUTUBE — iframe creado en gesto del usuario
+// 🎂 BIRTHDAY ANIMATION
 // ════════════════════════════════════════════
-// Audio local — funciona siempre, sin restricciones de embed
+function showBirthdayAnimation() {
+    // Evita duplicar si ya existe
+    const prev = document.getElementById('birthdayOverlay');
+    if (prev) prev.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'birthdayOverlay';
+
+    // Título gigante
+    const title = document.createElement('div');
+    title.className = 'bday-title';
+    title.innerHTML = `
+        🎂 ¡FELIZ CUMPLE! 🎉<br>
+        <span style="display:block">JANETH</span>
+    `;
+    overlay.appendChild(title);
+
+    // Confeti — colores variados, cae de arriba
+    const confettiColors = [
+        '#ff0066','#ff3388','#ffcc00','#ffaa00',
+        '#00ffaa','#00cc88','#00aaff','#0066ff',
+        '#cc00ff','#ff66cc','#ffffff'
+    ];
+    for (let i = 0; i < 120; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        const size = 6 + Math.random() * 10;
+        const w    = size;
+        const h    = size + Math.random() * 6;
+        c.style.left            = Math.random() * 100 + 'vw';
+        c.style.width           = w + 'px';
+        c.style.height          = h + 'px';
+        c.style.background      = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        c.style.animationDelay    = (Math.random() * 4).toFixed(2) + 's';
+        c.style.animationDuration = (3 + Math.random() * 3).toFixed(2) + 's';
+        c.style.transform       = `rotate(${Math.random() * 360}deg)`;
+        c.style.borderRadius    = Math.random() < 0.3 ? '50%' : '2px';
+        overlay.appendChild(c);
+    }
+
+    // Corazones flotantes
+    const heartIcons = ['♥','💖','💕','💗','💝','🎈'];
+    for (let i = 0; i < 24; i++) {
+        const h = document.createElement('div');
+        h.className = 'bday-heart';
+        h.textContent = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+        h.style.left              = Math.random() * 100 + 'vw';
+        h.style.fontSize          = (1.2 + Math.random() * 1.8).toFixed(1) + 'rem';
+        h.style.animationDelay    = (Math.random() * 5).toFixed(2) + 's';
+        h.style.animationDuration = (5 + Math.random() * 4).toFixed(2) + 's';
+        overlay.appendChild(h);
+    }
+
+    // Estrellas parpadeantes
+    for (let i = 0; i < 30; i++) {
+        const s = document.createElement('div');
+        s.className = 'bday-spark';
+        s.style.left              = Math.random() * 100 + 'vw';
+        s.style.top               = Math.random() * 100 + 'vh';
+        s.style.animationDelay    = (Math.random() * 2).toFixed(2) + 's';
+        s.style.animationDuration = (1 + Math.random() * 2).toFixed(2) + 's';
+        overlay.appendChild(s);
+    }
+
+    document.body.appendChild(overlay);
+    // Forzar reflow antes de añadir .visible para que transicione
+    void overlay.offsetWidth;
+    overlay.classList.add('visible');
+}
+
+function hideBirthdayAnimation() {
+    const o = document.getElementById('birthdayOverlay');
+    if (o) o.remove();
+}
+
+// ════════════════════════════════════════════
+// AUDIO LOCAL — sin restricciones de embed
+// ════════════════════════════════════════════
 const SONG_URL = 'audio/risk-it-all.mp3';
 let songAudio = null;
+
+// Precargamos desde ya para que el primer play sea instantáneo
+const songPreload = new Audio();
+songPreload.preload = 'auto';
+songPreload.src     = SONG_URL;
+
+function showAudioBanner(msg, isError) {
+    let b = document.getElementById('audioBanner');
+    if (!b) {
+        b = document.createElement('div');
+        b.id = 'audioBanner';
+        b.style.cssText = [
+            'position:fixed','top:8px','left:50%','transform:translateX(-50%)',
+            'background:rgba(0,0,0,0.85)','padding:8px 14px','border-radius:6px',
+            'font-family:Arial,sans-serif','font-size:0.75rem','letter-spacing:1px',
+            'z-index:9999','pointer-events:auto','cursor:pointer',
+            'box-shadow:0 4px 12px rgba(0,0,0,0.5)'
+        ].join(';');
+        b.addEventListener('click', () => {
+            if (songAudio) songAudio.play().catch(() => {});
+            b.remove();
+        });
+        document.body.appendChild(b);
+    }
+    b.style.color  = isError ? '#ff6688' : '#ff69b4';
+    b.style.border = '1px solid ' + (isError ? '#ff3366' : '#ff69b4');
+    b.textContent  = msg;
+}
 
 function ytStart() {
     ytStop();
     songAudio = new Audio(SONG_URL);
-    songAudio.loop = false;
-    songAudio.volume = 0.7;
+    songAudio.preload = 'auto';
+    songAudio.loop    = false;
+    songAudio.volume  = 0.7;
+
+    songAudio.addEventListener('error', () => {
+        const code = songAudio.error ? songAudio.error.code : '?';
+        showAudioBanner('♪ No se pudo cargar el audio (err ' + code + ') — revisa audio/risk-it-all.mp3', true);
+    });
+
     const p = songAudio.play();
     if (p && p.catch) {
-        p.catch(err => console.warn('Audio autoplay bloqueado:', err));
+        p.catch(err => {
+            console.warn('Audio autoplay bloqueado:', err);
+            showAudioBanner('♪ TOCA AQUÍ para activar la música', false);
+        });
     }
 }
 
@@ -500,16 +686,20 @@ function ytStop() {
         songAudio.currentTime = 0;
         songAudio = null;
     }
+    const b = document.getElementById('audioBanner');
+    if (b) b.remove();
 }
 
 // ════════════════════════════════════════════
 // BUTTONS
 // ════════════════════════════════════════════
 document.getElementById('restartBtn').addEventListener('click', () => {
+    hideBirthdayAnimation();
     ytStart();
     initGame();
 });
 document.getElementById('menuBtn').addEventListener('click', () => {
+    hideBirthdayAnimation();
     ytStop();
     window.location.href = 'index.html';
 });
