@@ -26,6 +26,7 @@
 // ════════════════════════════════════════
 const ROUTES = {
     'janeth': 'janeth.html',
+    'joel':   'joel.html',
     // 'carlos': 'carlos.html',
     // 'sofia':  'sofia.html',
 };

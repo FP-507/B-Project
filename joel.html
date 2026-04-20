@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty Shootout · Para Joel</title>
+    <meta name="description" content="Un mini-juego de penales para mi amigo Joel">
+    <meta name="author" content="Para Joel">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/joel.css">
+</head>
+<body>
+
+<!-- ═══════════ TAP OVERLAY ═══════════ -->
+<div id="tapOverlay">
+    <div class="to-title">PENALTY</div>
+    <div class="to-hero">SHOOTOUT</div>
+    <div class="to-subtitle">P A R A &nbsp;·&nbsp; J O E L</div>
+    <div class="to-song">⚽ &nbsp; Anota 3 goles para ganar &nbsp; 🥅</div>
+    <div class="to-cta">TOCA PARA EMPEZAR</div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="gameWrapper">
+    <div id="hud">
+        <div id="playerNameDisplay">⚽ Jugador</div>
+        <div id="goalsDisplay">0 / 3</div>
+        <div id="shotsDisplay">Tiros: 0</div>
+    </div>
+
+    <div id="pitch">
+        <!-- Portería -->
+        <div id="goal">
+            <div id="goalNet"></div>
+            <div id="goalPostL"></div>
+            <div id="goalPostR"></div>
+            <div id="goalCrossbar"></div>
+            <div id="keeper">🧤</div>
+        </div>
+
+        <!-- Área de penal -->
+        <div id="penaltyArea"></div>
+        <div id="penaltyCircle"></div>
+        <div id="penaltySpot"></div>
+
+        <!-- Balón -->
+        <div id="ball">⚽</div>
+
+        <!-- Indicador / feedback -->
+        <div id="feedback"></div>
+        <div id="aimHint">Toca dentro de la portería para disparar</div>
+        <div id="countdown"></div>
+    </div>
+
+    <div id="instructions">Apunta donde NO esté el portero ⚡</div>
+    <div id="progressBar"><div id="progressFill"></div></div>
+</div>
+
+<!-- ═══════════ END SCREEN ═══════════ -->
+<div id="endScreen">
+    <h2>⚽ ¡Partido Terminado!</h2>
+    <div class="for-joel-end">P A R A &nbsp;·&nbsp; J O E L</div>
+    <div id="finalScore"></div>
+    <div id="grade"></div>
+    <div id="stats"></div>
+    <div class="end-btns">
+        <button class="end-btn" id="restartBtn">Otra vez</button>
+        <button class="end-btn" id="menuBtn">Menú principal</button>
+    </div>
+</div>
+
+<script src="js/joel.js"></script>
+</body>
+</html>
