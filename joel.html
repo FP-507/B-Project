@@ -37,7 +37,95 @@
             <div id="goalPostL"></div>
             <div id="goalPostR"></div>
             <div id="goalCrossbar"></div>
-            <div id="keeper">🧤</div>
+            <div id="keeper">
+                <svg viewBox="0 0 80 104" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="kJersey" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0" stop-color="#ffe066"/>
+                            <stop offset="1" stop-color="#d97a00"/>
+                        </linearGradient>
+                        <linearGradient id="kShorts" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0" stop-color="#2a2a2a"/>
+                            <stop offset="1" stop-color="#070707"/>
+                        </linearGradient>
+                        <radialGradient id="kGlove" cx="0.3" cy="0.3" r="0.85">
+                            <stop offset="0" stop-color="#ffffff"/>
+                            <stop offset="1" stop-color="#9c9c9c"/>
+                        </radialGradient>
+                        <radialGradient id="kHead" cx="0.35" cy="0.3" r="0.85">
+                            <stop offset="0" stop-color="#ffe0bf"/>
+                            <stop offset="1" stop-color="#b87850"/>
+                        </radialGradient>
+                    </defs>
+
+                    <!-- Sombra en el piso -->
+                    <ellipse cx="40" cy="101" rx="20" ry="2.4" fill="#000" opacity="0.45"/>
+
+                    <!-- Piernas -->
+                    <rect x="31" y="72" width="8" height="27" rx="3" fill="url(#kShorts)" stroke="#000" stroke-opacity="0.45" stroke-width="0.8"/>
+                    <rect x="41" y="72" width="8" height="27" rx="3" fill="url(#kShorts)" stroke="#000" stroke-opacity="0.45" stroke-width="0.8"/>
+
+                    <!-- Botines -->
+                    <ellipse cx="35" cy="99" rx="5.5" ry="2.2" fill="#050505"/>
+                    <ellipse cx="45" cy="99" rx="5.5" ry="2.2" fill="#050505"/>
+
+                    <!-- Torso / camiseta -->
+                    <path d="M 26 36 Q 40 31 54 36 L 56 72 Q 40 76 24 72 Z"
+                          fill="url(#kJersey)" stroke="#000" stroke-opacity="0.5" stroke-width="1"/>
+
+                    <!-- Sombreado lateral torso -->
+                    <path d="M 24 72 Q 40 76 56 72 L 54 70 Q 40 73 26 70 Z"
+                          fill="#000" opacity="0.15"/>
+
+                    <!-- Número en el pecho -->
+                    <text x="40" y="58" font-family="'Space Grotesk', Arial Black, sans-serif"
+                          font-size="15" font-weight="900" fill="#fff" text-anchor="middle"
+                          stroke="#000" stroke-width="0.6" stroke-opacity="0.5">1</text>
+
+                    <!-- Brazos extendidos (posición de atajada) -->
+                    <path d="M 26 38 Q 18 44 14 52" stroke="url(#kJersey)" stroke-width="8"
+                          stroke-linecap="round" fill="none"/>
+                    <path d="M 54 38 Q 62 44 66 52" stroke="url(#kJersey)" stroke-width="8"
+                          stroke-linecap="round" fill="none"/>
+                    <!-- Sombra brazos -->
+                    <path d="M 26 38 Q 18 44 14 52" stroke="#000" stroke-width="8"
+                          stroke-linecap="round" fill="none" opacity="0.18"
+                          stroke-dasharray="0,20,100"/>
+
+                    <!-- Guantes -->
+                    <circle cx="13" cy="53" r="6.5" fill="url(#kGlove)" stroke="#1a1a1a" stroke-width="1.4"/>
+                    <circle cx="67" cy="53" r="6.5" fill="url(#kGlove)" stroke="#1a1a1a" stroke-width="1.4"/>
+                    <!-- Detalle guantes -->
+                    <path d="M 10 53 L 16 53 M 10 55 L 16 55" stroke="#1a1a1a" stroke-width="0.6" opacity="0.5"/>
+                    <path d="M 64 53 L 70 53 M 64 55 L 70 55" stroke="#1a1a1a" stroke-width="0.6" opacity="0.5"/>
+
+                    <!-- Cuello -->
+                    <rect x="36" y="30" width="8" height="6" fill="#1a1a1a"/>
+
+                    <!-- Cabeza -->
+                    <circle cx="40" cy="20" r="11" fill="url(#kHead)" stroke="#5a3820" stroke-width="1.3"/>
+
+                    <!-- Pelo -->
+                    <path d="M 30 18 Q 32 9 40 9 Q 48 9 50 18 Q 48 14 44 14 Q 40 12 36 14 Q 32 14 30 18 Z"
+                          fill="#2a1a0a"/>
+
+                    <!-- Orejas -->
+                    <ellipse cx="29.5" cy="21" rx="1.6" ry="2.4" fill="url(#kHead)" stroke="#5a3820" stroke-width="0.8"/>
+                    <ellipse cx="50.5" cy="21" rx="1.6" ry="2.4" fill="url(#kHead)" stroke="#5a3820" stroke-width="0.8"/>
+
+                    <!-- Cejas concentradas -->
+                    <path d="M 33.5 18.5 L 37.5 19.5" stroke="#2a1a0a" stroke-width="1.4" stroke-linecap="round"/>
+                    <path d="M 46.5 19.5 L 42.5 18.5" stroke="#2a1a0a" stroke-width="1.4" stroke-linecap="round"/>
+
+                    <!-- Ojos -->
+                    <circle cx="36" cy="22" r="1.3" fill="#111"/>
+                    <circle cx="44" cy="22" r="1.3" fill="#111"/>
+
+                    <!-- Boca -->
+                    <path d="M 37 27 Q 40 28.5 43 27" stroke="#5a3820" stroke-width="1.2"
+                          stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
         </div>
 
         <!-- Área de penal -->

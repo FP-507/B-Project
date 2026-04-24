@@ -50,6 +50,7 @@ window.addEventListener('orientationchange', () => setTimeout(applyScale, 200));
 // CONSTANTS
 // ════════════════════════════════════════════
 const GOALS_TO_WIN = 3;
+const MAX_SHOTS    = 8;   // 8 tiros para hacer 3 goles
 
 const PITCH_W = 500;
 const PITCH_H = 640;
@@ -62,13 +63,22 @@ const GOAL_HEIGHT = 120;
 const GOAL_LINE_Y = GOAL_TOP + GOAL_HEIGHT; // 160 — donde el portero
 
 // Balón (reposo)
-const BALL_REST_X    = PITCH_W / 2;
-const BALL_REST_Y    = PITCH_H - 80; // desde top
-// Nota: en CSS usamos bottom:80px, aquí trabajamos en Y desde top del pitch.
+const BALL_REST_X = PITCH_W / 2;
+const BALL_REST_Y = PITCH_H - 80;
+const BALL_R      = 18;   // radio efectivo del balón para colisión
 
-// Portero
-const KEEPER_WIDTH  = 70;   // ancho efectivo (tolerancia visual)
-const KEEPER_SPEED  = 160;  // px/s base
+// Portero — hitbox ajustado al alcance real de los guantes del SVG
+// (guantes en x=13 y x=67, radio 6.5 → silueta de 67px → half ≈ 34)
+const KEEPER_WIDTH       = 80;
+const KEEPER_HALF        = 34;                 // half-width visible del sprite
+const SAVE_TOL           = KEEPER_HALF + BALL_R; // 52 — coincide con la silueta
+const KEEPER_BASE_SPEED  = 240;                // px/s base oscilación
+const KEEPER_SPEED_BOOST = 55;                 // +por gol
+const KEEPER_REACT_MS    = 150;                // reacción tras el disparo
+const KEEPER_DIVE_SPEED  = 280;                // px/s al lanzarse
+const KEEPER_DIVE_BOOST  = 35;                 // +por gol
+
+const FLIGHT_DUR = 0.48;  // segundos que tarda el balón en llegar
 
 // ════════════════════════════════════════════
 // STATE
@@ -87,11 +97,13 @@ let targetY       = 0;
 let shotStartTime = 0;
 
 // Portero
-let keeperX      = GOAL_LEFT + GOAL_WIDTH / 2;
-let keeperDir    = 1;
-let keeperSpeed  = KEEPER_SPEED;
-let keeperMin    = GOAL_LEFT + KEEPER_WIDTH / 2 - 10;
-let keeperMax    = GOAL_LEFT + GOAL_WIDTH - KEEPER_WIDTH / 2 + 10;
+let keeperX        = GOAL_LEFT + GOAL_WIDTH / 2;
+let keeperDir      = 1;
+let keeperState    = 'osc';  // 'osc' | 'reacting' | 'diving'
+let keeperDiveTgt  = 0;
+let keeperDiveAt   = 0;       // timestamp cuando empezar a lanzarse
+const keeperMin    = GOAL_LEFT + KEEPER_HALF + 4;
+const keeperMax    = GOAL_LEFT + GOAL_WIDTH - KEEPER_HALF - 4;
 
 // ════════════════════════════════════════════
 // DOM REFS
@@ -118,9 +130,10 @@ function initGame() {
     shots = 0;
     saves = 0;
     resetBall();
-    keeperX   = GOAL_LEFT + GOAL_WIDTH / 2;
-    keeperDir = Math.random() < 0.5 ? 1 : -1;
-    keeperSpeed = KEEPER_SPEED;
+    keeperX     = GOAL_LEFT + GOAL_WIDTH / 2;
+    keeperDir   = Math.random() < 0.5 ? 1 : -1;
+    keeperState = 'osc';
+    keeperEl.classList.remove('lean-left','lean-right');
 
     endScreen.style.display   = 'none';
     gameWrapper.style.display = 'flex';
@@ -165,17 +178,41 @@ function gameLoop(ts) {
     const dt = lastFrameTs ? (ts - lastFrameTs) / 1000 : 0;
     lastFrameTs = ts;
 
-    // Portero rebotando — velocidad crece con goles
-    const currentSpeed = keeperSpeed + goals * 45;
-    keeperX += keeperDir * currentSpeed * dt;
-    if (keeperX < keeperMin) { keeperX = keeperMin; keeperDir = 1; }
-    if (keeperX > keeperMax) { keeperX = keeperMax; keeperDir = -1; }
-    keeperEl.style.left = keeperX + 'px';
+    // ── IA del portero ─────────────────────────────
+    if (keeperState === 'osc') {
+        // Oscilación: velocidad crece con goles
+        const oscSpeed = KEEPER_BASE_SPEED + goals * KEEPER_SPEED_BOOST;
+        keeperX += keeperDir * oscSpeed * dt;
+        if (keeperX < keeperMin) { keeperX = keeperMin; keeperDir = 1; }
+        if (keeperX > keeperMax) { keeperX = keeperMax; keeperDir = -1; }
+    } else if (keeperState === 'reacting') {
+        // Sigue oscilando durante la ventana de reacción
+        const oscSpeed = KEEPER_BASE_SPEED + goals * KEEPER_SPEED_BOOST;
+        keeperX += keeperDir * oscSpeed * dt;
+        if (keeperX < keeperMin) { keeperX = keeperMin; keeperDir = 1; }
+        if (keeperX > keeperMax) { keeperX = keeperMax; keeperDir = -1; }
+        if (ts >= keeperDiveAt) {
+            keeperState = 'diving';
+            // Lean visual según dirección
+            if (keeperDiveTgt < keeperX) keeperEl.classList.add('lean-left');
+            else                         keeperEl.classList.add('lean-right');
+        }
+    } else if (keeperState === 'diving') {
+        // Se lanza hacia donde apuntaste
+        const diveSpeed = KEEPER_DIVE_SPEED + goals * KEEPER_DIVE_BOOST;
+        const diff = keeperDiveTgt - keeperX;
+        const step = diveSpeed * dt;
+        if (Math.abs(diff) <= step) keeperX = keeperDiveTgt;
+        else                        keeperX += Math.sign(diff) * step;
+    }
+    keeperX = Math.max(keeperMin, Math.min(keeperMax, keeperX));
+    // keeperX está en coords del pitch, pero #keeper es hijo de #goal
+    // → hay que restar GOAL_LEFT para pintarlo en la posición correcta
+    keeperEl.style.left = (keeperX - GOAL_LEFT) + 'px';
 
     // Balón volando
     if (ballState === 'flying') {
         const elapsedFlight = (ts - shotStartTime) / 1000;
-        const FLIGHT_DUR = 0.45; // 450ms
         const p = Math.min(1, elapsedFlight / FLIGHT_DUR);
 
         // Interpolación con ligera parábola (sube un poco en el medio)
@@ -228,20 +265,22 @@ function shoot(tx, ty) {
     shotStartTime = performance.now();
     ballEl.classList.add('kicking');
     aimHint.classList.add('hidden');
+
+    // Activar la reacción del portero
+    keeperDiveTgt = tx;
+    keeperDiveAt  = shotStartTime + KEEPER_REACT_MS;
+    keeperState   = 'reacting';
     updateHUD();
 }
 
 function evaluateShot() {
-    // Colisión con el portero en el momento del impacto
-    const tolerance = KEEPER_WIDTH / 2 + 22; // +22 para el balón
+    // Colisión: distancia entre centro del balón y centro del portero
     const dx = Math.abs(targetX - keeperX);
 
-    if (dx <= tolerance) {
+    if (dx <= SAVE_TOL) {
         // Atajado
         saves++;
         ballState = 'saved';
-        keeperEl.classList.add('diving');
-        setTimeout(() => keeperEl.classList.remove('diving'), 350);
         showFeedback('¡ATAJADA!', '#ff4455');
     } else {
         // GOL
@@ -253,13 +292,26 @@ function evaluateShot() {
     updateHUD();
     updateProgress();
 
+    // Portero vuelve a oscilar
+    setTimeout(() => {
+        keeperEl.classList.remove('lean-left','lean-right');
+        keeperState = 'osc';
+        // Que retome dirección hacia el centro para variar
+        keeperDir = keeperX > (GOAL_LEFT + GOAL_WIDTH / 2) ? -1 : 1;
+    }, 500);
+
     // Revisar victoria
     if (goals >= GOALS_TO_WIN) {
-        setTimeout(() => winGame(), 900);
+        setTimeout(() => winGame(true), 900);
         return;
     }
 
-    // Reset para el siguiente tiro
+    // Revisar derrota (se acabaron los tiros sin llegar a 3)
+    if (shots >= MAX_SHOTS) {
+        setTimeout(() => winGame(false), 900);
+        return;
+    }
+
     setTimeout(() => resetBall(), 900);
 }
 
@@ -297,7 +349,7 @@ function showFeedback(text, color) {
 
 function updateHUD() {
     goalsEl.textContent = goals + ' / ' + GOALS_TO_WIN;
-    shotsEl.textContent = 'Tiros: ' + shots;
+    shotsEl.textContent = 'Tiros: ' + shots + ' / ' + MAX_SHOTS;
 }
 
 function updateProgress() {
@@ -308,19 +360,26 @@ function updateProgress() {
 // ════════════════════════════════════════════
 // WIN / END
 // ════════════════════════════════════════════
-function winGame() {
+function winGame(didWin) {
     gameRunning = false;
 
     gameWrapper.style.display = 'none';
     endScreen.style.display   = 'block';
 
     const acc = shots > 0 ? (goals / shots * 100) : 0;
-    let grade, gColor;
-    if      (acc >= 90) { grade = '⭐ MVP'; gColor = '#ffcc00'; }
-    else if (acc >= 70) { grade = 'CRACK';  gColor = '#00ff88'; }
-    else if (acc >= 50) { grade = 'BUENO';  gColor = '#00e5ff'; }
-    else                { grade = 'SIGUE';  gColor = '#a855ff'; }
+    let grade, gColor, headline;
+    if (didWin) {
+        headline = '⚽ ¡Lo lograste!';
+        if      (acc >= 75)  { grade = '⭐ MVP';     gColor = '#ffcc00'; }
+        else if (acc >= 50)  { grade = 'GOLEADOR';   gColor = '#00ff88'; }
+        else                 { grade = 'CAMPEÓN';    gColor = '#00e5ff'; }
+    } else {
+        headline = '❌ Sin más tiros';
+        grade  = 'SIGUE';
+        gColor = '#a855ff';
+    }
 
+    document.querySelector('#endScreen h2').textContent = headline;
     document.getElementById('finalScore').textContent = goals + ' / ' + GOALS_TO_WIN + ' goles';
     const gradeEl = document.getElementById('grade');
     gradeEl.textContent      = grade;
@@ -329,14 +388,14 @@ function winGame() {
 
     document.getElementById('stats').innerHTML = `
         <div>⚽ &nbsp;<b style="color:#fff">${PLAYER_NAME}</b></div>
-        <div>Goles: <b style="color:#00ff88">${goals}</b></div>
-        <div>Tiros totales: <b style="color:#fff">${shots}</b></div>
+        <div>Goles: <b style="color:#00ff88">${goals}</b> / ${GOALS_TO_WIN}</div>
+        <div>Tiros: <b style="color:#fff">${shots}</b> / ${MAX_SHOTS}</div>
         <div>Atajadas: <b style="color:#ff6688">${saves}</b></div>
         <div>Efectividad: <b style="color:#fff">${acc.toFixed(1)}%</b></div>
     `;
 
-    // 🎂 Animación de cumpleaños al alcanzar los 3 goles
-    showBirthdayAnimation();
+    // 🎂 Solo celebración de cumpleaños si realmente ganó (3 goles)
+    if (didWin) showBirthdayAnimation();
 }
 
 // ════════════════════════════════════════════
@@ -357,6 +416,21 @@ function showBirthdayAnimation() {
         <span style="display:block">JOEL</span>
     `;
     overlay.appendChild(title);
+
+    // Joel con la copa — imagen real + halo animado
+    const champ = document.createElement('div');
+    champ.className = 'bday-champ';
+    champ.innerHTML = `
+      <img class="j-photo" src="assets/joel-champion.png" alt="Joel campeón"/>
+      <div class="j-sparkles">
+        <span class="j-sp j-sp-1"></span>
+        <span class="j-sp j-sp-2"></span>
+        <span class="j-sp j-sp-3"></span>
+        <span class="j-sp j-sp-4"></span>
+        <span class="j-sp j-sp-5"></span>
+      </div>
+    `;
+    overlay.appendChild(champ);
 
     // Confeti
     const confettiColors = [
